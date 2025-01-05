@@ -1,0 +1,44 @@
+name: Step 1, Basic Completion
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.ts"
+      - "**/*.tsx"
+
+permissions:
+  contents: write
+
+jobs:
+  verify_completion:
+    name: Verify Basic Completion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify file modifications
+        run: |
+          # Check if any TypeScript files were modified
+          if ! git diff --name-only HEAD~1 HEAD | grep -E '\.tsx?$'; then
+            echo "No TypeScript files were modified"
+            exit 1
+          fi
+
+      - name: Update step
+        if: success()
+        run: |
+          echo '2' > .github/steps/-step.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .github/steps/-step.txt
+          git commit -m "Complete step 1"
+          git push

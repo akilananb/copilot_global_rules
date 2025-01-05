@@ -1,17 +1,18 @@
-name: Step 3, Refactoring
+name: Step 3, Copilot Hub Suggestions
 
-# This step triggers after refactoring tasks
+# This step triggers after push to member.js
+# This workflow updates from step 3 to step 4.
 on:
   workflow_dispatch:
   push:
     paths:
-      - "src/**/*.js"
-      - "src/**/*.ts"
-      - "src/**/*.tsx"
+      - "member.js"
     branches:
       - main
 
 permissions:
+  # Need `contents: read` to checkout the repository.
+  # Need `contents: write` to update the step metadata.
   contents: write
 
 jobs:
@@ -26,10 +27,15 @@ jobs:
     outputs:
       current_step: ${{ steps.get_step.outputs.current_step }}
 
-  on_refactoring:
-    name: On Code Refactoring
+  on_copilot_hub:
+    name: On Copilot Hub Suggestion
     needs: get_current_step
+
+    # We will only run this action when:
+    # 1. This repository isn't the template repository.
+    # 2. The current step is 3
     if: ${{ !github.event.repository.is_template && needs.get_current_step.outputs.current_step == 3 }}
+
     runs-on: ubuntu-latest
 
     steps:
@@ -38,12 +44,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check refactored code
+      # Verify the learner added the member function
+      - name: Check member.js
         uses: skills/action-check-file@v1
         with:
-          file: "src/**/*.{js,ts,tsx}"
-          search: "refactor|optimize|improve"
+          file: "member.js"
+          search: "skillsMember"
 
+      # Update to the next step
       - name: Update to step 4
         uses: skills/action-update-step@v2
         with:

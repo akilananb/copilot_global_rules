@@ -1,17 +1,18 @@
-name: Step 4, Debugging
+name: Step 4, Copilot Comments
 
-# This step triggers after debugging tasks
+# This step triggers after push to comments.js
+# This workflow updates from step 4 to completion.
 on:
   workflow_dispatch:
   push:
     paths:
-      - "src/**/__tests__/**"
-      - "src/**/debug/**"
-      - "src/lib/logger.ts"
+      - "comments.js"
     branches:
       - main
 
 permissions:
+  # Need `contents: read` to checkout the repository.
+  # Need `contents: write` to update the step metadata.
   contents: write
 
 jobs:
@@ -26,10 +27,15 @@ jobs:
     outputs:
       current_step: ${{ steps.get_step.outputs.current_step }}
 
-  on_debugging:
-    name: On Debugging Implementation
+  on_copilot_comment:
+    name: On Copilot Comment Usage
     needs: get_current_step
+
+    # We will only run this action when:
+    # 1. This repository isn't the template repository.
+    # 2. The current step is 4
     if: ${{ !github.event.repository.is_template && needs.get_current_step.outputs.current_step == 4 }}
+
     runs-on: ubuntu-latest
 
     steps:
@@ -38,12 +44,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check debug files
+      # Verify the learner added comments
+      - name: Check comments
         uses: skills/action-check-file@v1
         with:
-          file: "src/**/{__tests__,debug}/**"
-          search: "debug|test|error"
+          file: "comments.js"
+          search: "// Function to calculate"
 
+      # Update to the next step
       - name: Update to final step
         uses: skills/action-update-step@v2
         with:

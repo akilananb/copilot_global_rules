@@ -1,17 +1,18 @@
 name: Step 1, Basic Completion
 
-# This step triggers after basic completion tasks
+# This step triggers after push to any JavaScript/TypeScript files
+# This workflow updates from step 1 to step 2.
 on:
   workflow_dispatch:
   push:
     paths:
-      - "src/**/*.js"
-      - "src/**/*.ts"
-      - "src/**/*.tsx"
+      - ".devcontainer/devcontainer.json"
     branches:
       - main
 
 permissions:
+  # Need `contents: read` to checkout the repository.
+  # Need `contents: write` to update the step metadata.
   contents: write
 
 jobs:
@@ -29,7 +30,12 @@ jobs:
   on_basic_completion:
     name: On Basic Completion
     needs: get_current_step
+
+    # We will only run this action when:
+    # 1. This repository isn't the template repository.
+    # 2. The current step is 1
     if: ${{ !github.event.repository.is_template && needs.get_current_step.outputs.current_step == 1 }}
+
     runs-on: ubuntu-latest
 
     steps:
@@ -38,12 +44,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check file changes
+      # Verify the learner added Copilot extension
+      - name: Check devcontainer setup
         uses: skills/action-check-file@v1
         with:
-          file: "src/**/*.{js,ts,tsx}"
-          search: "function"
+          file: ".devcontainer/devcontainer.json"
+          search: "GitHub\\.copilot"
 
+      # Update to the next step
       - name: Update to step 2
         uses: skills/action-update-step@v2
         with:

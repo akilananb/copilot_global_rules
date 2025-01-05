@@ -31,11 +31,13 @@ jobs:
           fi
 
       - name: Update step
-        if: success()
         run: |
-          echo '3' > .github/steps/-step.txt
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .github/steps/-step.txt
-          git commit -m "Complete step 2"
-          git push
+          mkdir -p .github/steps
+          echo "2" > .github/steps/-step.txt
+          if [[ -n $(git status --porcelain) ]]; then
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git add .github/steps/-step.txt
+            git commit -m "Complete step 2"
+            git push
+          fi

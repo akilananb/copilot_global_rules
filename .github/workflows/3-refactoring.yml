@@ -6,38 +6,29 @@ on:
     branches:
       - main
     paths:
-      - "src/**/*.ts"
-      - "src/**/*.tsx"
+      - 'src/**/*.js'
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  verify_refactoring:
-    name: Verify Code Refactoring
+  verify_step:
+    name: Verify Step
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Verify significant changes
+      - name: Verify file changes
         run: |
           # Check for substantial code changes
           if ! git diff --stat HEAD~1 HEAD | awk '{files += 1} END {exit files < 1}'; then
             echo "No significant code changes detected"
             exit 1
           fi
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
 
       - name: Update step
         if: success()

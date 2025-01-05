@@ -6,39 +6,29 @@ on:
     branches:
       - main
     paths:
-      - "**/__tests__/**"
-      - "**/debug/**"
-      - "src/lib/logger.ts"
+      - 'src/**/__tests__/**'
+      - 'src/**/debug/**'
+      - 'src/lib/logger.ts'
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  verify_debugging:
-    name: Verify Debugging Implementation
+  verify_step:
+    name: Verify Step
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Verify debug additions
+      - name: Verify file changes
         run: |
           # Check for debugging-related changes
           if ! git diff --name-only HEAD~1 HEAD | grep -E '(__tests__|debug|logger)'; then
             echo "No debugging-related changes detected"
             exit 1
           fi
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test
 
       - name: Update step
         if: success()

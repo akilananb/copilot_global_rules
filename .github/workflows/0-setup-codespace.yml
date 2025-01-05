@@ -1,37 +1,50 @@
-name: Setup Codespace
+name: Step 0, Setup Codespace
 
+# This step triggers after setup of codespace
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
     paths:
-      - '.devcontainer/**'
+      - ".devcontainer/**"
+    branches:
+      - main
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  setup_environment:
-    name: Setup Environment
+  get_current_step:
+    name: Check current step number
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - id: get_step
+        run: echo "current_step=$(cat ./.github/steps/-step.txt)" >> $GITHUB_OUTPUT
+    outputs:
+      current_step: ${{ steps.get_step.outputs.current_step }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+  on_codespace_setup:
+    name: On Codespace Setup
+    needs: get_current_step
+    if: ${{ !github.event.repository.is_template && needs.get_current_step.outputs.current_step == 0 }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: '20'
+          fetch-depth: 0
 
-      - name: Update step
-        run: |
-          mkdir -p .github/steps
-          echo "0" > .github/steps/-step.txt
-          if [[ -n $(git status --porcelain) ]]; then
-            git config user.name github-actions
-            git config user.email github-actions@github.com
-            git add .github/steps/-step.txt
-            git commit -m "Setup complete"
-            git push
-          fi
+      - name: Check devcontainer setup
+        uses: skills/action-check-file@v1
+        with:
+          file: ".devcontainer/devcontainer.json"
+          search: "customizations"
+
+      - name: Update to step 1
+        uses: skills/action-update-step@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          from_step: 0
+          to_step: 1
